@@ -1,4 +1,9 @@
-import { NextResponse, NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import connect from "@/lib/database/db";
+import Blog from "@/lib/modals/blog";
+import { Types } from "mongoose";
+import User from "@/lib/modals/user";
+
 
 export const GET = (request: Request)=> {
     return NextResponse.redirect(new URL('/api/blogs', request.url))
