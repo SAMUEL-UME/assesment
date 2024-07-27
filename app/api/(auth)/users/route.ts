@@ -1,37 +1,59 @@
 import User from "@/lib/modals/user";
-import connect from "@/lib/db";
+const jwt = require("jsonwebtoken");
+import connect from "@/lib/database/db";
 import { NextResponse } from "next/server";
 import { Types } from "mongoose";
-
-
+import { encrypt, decrypt } from "@/lib/constant";
+import { SECRET } from "@/lib/config/config";
+import { maxAge } from "@/lib/utils/utils";
 const ObjectId = require("mongoose").Types.ObjectId;
 
-export const GET = async () => {
-  try {
-    await connect();
-    const users = await User.find();
-    return new NextResponse(JSON.stringify(users), { status: 200 });
-  } catch (error: any) {
-    return new NextResponse(
-      JSON.stringify({ error: "Error fetching users", mssg: error.message }),
-      { status: 400 }
-    );
-  }
+const createToken = (id) => {
+  return jwt.sign({ id }, SECRET, {
+    expiresIn: maxAge,
+  });
 };
+
+// export const GET = async () => {
+//   try {
+//     await connect();
+//     const users = await User.find();
+//     return new NextResponse(JSON.stringify(users), { status: 200 });
+//   } catch (error: any) {
+//     return new NextResponse(
+//       JSON.stringify({ error: "Error fetching users", mssg: error.message }),
+//       { status: 400 }
+//     );
+//   }
+// };
 
 export const POST = async (request: Request) => {
   try {
-    const {email,  username, password} = await request.json();
+    const { email, username, password } = await request.json();
     await connect();
-    const existingUser = await User.findOne({email})
-    if(existingUser)   return new NextResponse(
-        JSON.stringify({ message: "User already exist", }),
+
+    //check email exist
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return new NextResponse(
+        JSON.stringify({ message: "User already exist" }),
         { status: 409 }
       );
-    const newUser = new User({email, username, password});
+
+    const newUser = new User({ email, username, password: encrypt(password) });
     await newUser.save();
+
+    const token = createToken(newUser._id);
+
+    const userForClient = { ...newUser._doc };
+    delete userForClient.password;
+
     return new NextResponse(
-      JSON.stringify({ message: "User is created", user: newUser }),
+      JSON.stringify({
+        message: "User is created",
+        user: userForClient,
+        token,
+      }),
       { status: 200 }
     );
   } catch (error: any) {

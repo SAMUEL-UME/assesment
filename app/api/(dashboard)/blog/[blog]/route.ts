@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import connect from "@/lib/db";
+import connect from "@/lib/database/db";
 import Blog from "@/lib/modals/blog";
 import { Types } from "mongoose";
 import User from "@/lib/modals/user";

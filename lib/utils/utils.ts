@@ -1,0 +1,1 @@
+export const maxAge = 1 * 60 * 60
